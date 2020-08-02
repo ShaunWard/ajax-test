@@ -1,7 +1,9 @@
-function getData(cb) {                                          //cb short for callback
+let baseURL = "https://ci-swapi.herokuapp.com/api/"
+
+function getData(type, cb) {                                    //cb short for callback
     let xhr = new XMLHttpRequest();
 
-    xhr.open("GET", "https://ci-swapi.herokuapp.com/api/");     //Open a request to get data from URL
+    xhr.open("GET", baseURL + type + "/");                      //Open a request to get data from URL
     xhr.send();                                                 //Send that request
 
     xhr.onreadystatechange = function() {
@@ -11,8 +13,33 @@ function getData(cb) {                                          //cb short for c
     };
 };
 
-function printDataToConsole(data) {
-    console.log(data);
+function getTableHeaders(obj) {
+    let tableHeaders = [];
+    Object.keys(obj).forEach(function(key){
+        tableHeaders.push(`<td>${key}</td>`)
+    });
+
+    return `<tr>${tableHeaders}</tr>`
 }
 
-getData(printDataToConsole);
+function writeToDocument(type) {
+    let tableRows = [];
+    let el = document.getElementById("data");
+    el.innerHTML = "";
+
+    getData(type, function(data){
+        data = data.results;
+        let tableHeaders = getTableHeaders(data[0]);
+
+        data.forEach(function(item){
+            let dataRow = [];
+            Object.keys(item).forEach(function(key){
+                let rowData = item[key].toString();
+                let truncatedData = rowData.substring(0, 15);
+                dataRow.push(`<td>${truncatedData}</td>`)
+            });
+            tableRows.push(`<tr>${dataRow}</tr>`);
+        })
+        el.innerHTML = `<table>${tableHeaders}${tableRows}</table>`
+    });
+}
