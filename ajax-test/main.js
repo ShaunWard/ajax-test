@@ -1,45 +1,61 @@
-let baseURL = "https://ci-swapi.herokuapp.com/api/"
-
-function getData(type, cb) {                                    //cb short for callback
-    let xhr = new XMLHttpRequest();
-
-    xhr.open("GET", baseURL + type + "/");                      //Open a request to get data from URL
-    xhr.send();                                                 //Send that request
+function getData(url, cb) {
+    var xhr = new XMLHttpRequest();
 
     xhr.onreadystatechange = function() {
-        if(this.readyState == 4 && this.status == 200) {
-            cb(JSON.parse(this.responseText));                  //Changes the returned string into JSON format
+        if (this.readyState == 4 && this.status == 200) {
+            cb(JSON.parse(this.responseText));
         }
     };
-};
 
-function getTableHeaders(obj) {
-    let tableHeaders = [];
-    Object.keys(obj).forEach(function(key){
-        tableHeaders.push(`<td>${key}</td>`)
-    });
-
-    return `<tr>${tableHeaders}</tr>`
+    xhr.open("GET", url);
+    xhr.send();
 }
 
-function writeToDocument(type) {
-    let tableRows = [];
-    let el = document.getElementById("data");
-    el.innerHTML = "";
+function getTableHeaders(obj) {
+    var tableHeaders = [];
 
-    getData(type, function(data){
+    Object.keys(obj).forEach(function(key) {
+        tableHeaders.push(`<td>${key}</td>`);
+    });
+
+    return `<tr>${tableHeaders}</tr>`;
+}
+
+function generatePaginationButtons(next, prev) {
+    if (next && prev) {
+        return `<button onclick="writeToDocument('${prev}')">Previous</button>
+                <button onclick="writeToDocument('${next}')">Next</button>`;
+    } else if (next && !prev) {
+        return `<button onclick="writeToDocument('${next}')">Next</button>`;
+    } else if (!next && prev) {
+        return `<button onclick="writeToDocument('${prev}')">Previous</button>`;
+    }
+}
+
+function writeToDocument(url) {
+    var tableRows = [];
+    var el = document.getElementById("data");
+
+    getData(url, function(data) {
+        var pagination = "";
+
+        if (data.next || data.previous) {
+            pagination = generatePaginationButtons(data.next, data.previous);
+        }
         data = data.results;
-        let tableHeaders = getTableHeaders(data[0]);
+        var tableHeaders = getTableHeaders(data[0]);
 
-        data.forEach(function(item){
-            let dataRow = [];
-            Object.keys(item).forEach(function(key){
-                let rowData = item[key].toString();
-                let truncatedData = rowData.substring(0, 15);
-                dataRow.push(`<td>${truncatedData}</td>`)
+        data.forEach(function(item) {
+            var dataRow = [];
+
+            Object.keys(item).forEach(function(key) {
+                var rowData = item[key].toString();
+                var truncatedData = rowData.substring(0, 15);
+                dataRow.push(`<td>${truncatedData}</td>`);
             });
             tableRows.push(`<tr>${dataRow}</tr>`);
-        })
-        el.innerHTML = `<table>${tableHeaders}${tableRows}</table>`
+        });
+
+        el.innerHTML = `<table>${tableHeaders}${tableRows}</table>${pagination}`;
     });
 }
